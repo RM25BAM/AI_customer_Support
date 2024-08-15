@@ -3,3 +3,5 @@ langchain
 langchain-community
 tavily-python
 Pyrebase
+pinecone-client
+langchain_ollama
