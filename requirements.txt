@@ -5,3 +5,6 @@ tavily-python
 Pyrebase
 pinecone-client
 langchain_ollama
+pycryptodome
+flask_restful
+setuptools
