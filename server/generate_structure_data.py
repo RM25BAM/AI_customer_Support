@@ -4,7 +4,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import time
-
+from server.ai_setup import configureOllama
 
 load_dotenv("server/.env.dev")
 
@@ -17,32 +17,18 @@ def google_search(search_term, cse_id, **kwargs):
     res = service.cse().list(q=search_term, cx=cse_id, **kwargs).execute()
     result = res['items']
     info = {}
-    for index, result in enumerate(results):
+    for index, result in enumerate(result):
         title = result.get('title')
         link = result.get('link')
         snippet = result.get("snippet")
-        paragraph = details(link)
+        paragraph = get_details_searches(link)
         time.sleep(3)
         info[index] = [title, link, snippet, paragraph]
 
     return info
         
 
-
-
-
-results = google_search('Best food in Dominican Republic in San Jose de ocoa', my_cse_id, num=10, cr="us", lr="lang_en")
-# for result in results:
-#     title = result.get('title')
-#     link = result.get('link')
-#     snippet = result.get("snippet")
-#     # print(result.get('title'))
-    # print(result.get('link'))
-    # print(result.get('snippet'))
-    # print('\n')
-
-
-def details(url):
+def get_details_searches(url):
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -59,3 +45,6 @@ def details(url):
 
     else:
         print(f"Failed to retrieve the page. Status code: {response.status_code}")
+
+
+
