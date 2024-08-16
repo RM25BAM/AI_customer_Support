@@ -1,10 +1,10 @@
 python-dotenv
 langchain
 langchain-community
-tavily-python
 Pyrebase
 pinecone-client
 langchain_ollama
 pycryptodome
 flask_restful
 setuptools
+google-api-python-client

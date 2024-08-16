@@ -1,59 +1,14 @@
-import requests
-import json
-import os
-from dotenv import load_dotenv
-from typing import Any, List, Mapping, Optional
-from langchain.callbacks.manager import CallbackManagerForLLMRun
-from langchain.llms.base import LLM
 from langchain_ollama import OllamaLLM
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_core.prompts import PromptTemplate
 
-load_dotenv('server/.env.dev')
-
-OPENROUTER_API_KEY=os.getenv('OPENROUTER_API_KEY')
-
-class LLAMA2LLM(LLM):
-    n: int
-
-    @property
-    def _llm_type(self) -> str:
-        return "claude2"
-
-    def _call(
-        self,
-        prompt: str,
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[CallbackManagerForLLMRun] = None,
-        **kwargs: Any,
-    ) -> str:
-        headers = {
-            'Authorization': f'Bearer {OPENROUTER_API_KEY}',
-            'Content-Type': 'application/json'
-        }
-        data = {
-            'model': "meta-llama/llama-3.1-8b-instruct:free",
-            'messages': [
-                {'role': 'user', 'content': prompt}
-            ]
-        }
-        response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, data=json.dumps(data))
-        output = response.json()['choices'][0]['message']['content']
-
-        if stop is not None:
-            raise ValueError("stop kwargs are not permitted.")
-        return output
-
-    @property
-    def _identifying_params(self) -> Mapping[str, Any]:
-        return {"n": self.n}
-
-llm = LLAMA2LLM(n=1)
 
 
 def configureOllama(query):
+    if is_travel_related(query) == False:
+        return None
     model = OllamaLLM(model="llama3.1")
-    response_schema = [ResponseSchema(name="search_query", description="Provide the best 2 Google search query related to the user's question")]
+    response_schema = [ResponseSchema(name="search_query", description="Provide the best 1 Google search query related to the user's question")]
 
     output_parser = StructuredOutputParser.from_response_schemas(response_schema)
     format_instructions = output_parser.get_format_instructions()
@@ -66,6 +21,66 @@ def configureOllama(query):
     
     result = chain.invoke({"question": query})
 
-    return result
+    return result # {'search_query': ['Iceland travel accommodations']}
 
 
+
+def filtered_summarizer(query, paragraph):
+    
+    model = OllamaLLM(model="llama3.1")
+    
+    response_schema = [
+        ResponseSchema(name="summary", description="A summary of the paragraph."),
+        ResponseSchema(name="related", description="Summerize relevant to related to the user's input.")
+    ]
+    
+    output_parser = StructuredOutputParser.from_response_schemas(response_schema)
+    format_instructions = output_parser.get_format_instructions()
+    
+    prompt = PromptTemplate(
+        template=(
+            "Summarize the following paragraphs into one cohesive summary and provide information relevant to the user's query.\n"
+            "{format_instructions}\n\n"
+            "Query: {query}\n\n"
+            "Paragraphs:\n{paragraphs}"
+        ),
+        input_variables=["query", "summary"],
+        partial_variables={"format_instructions": format_instructions},
+    )
+    
+    chain = prompt | model | output_parser
+    result = chain.invoke({"query": query, "summary": paragraph})
+    
+    return result # response['summary'], response['related']
+
+
+def is_travel_related(query):
+    # Define a list of travel-related keywords
+    model = OllamaLLM(model="llama3.1")
+
+    response_schema = ResponseSchema(
+        name="travel_related",
+        description="Indicate whether the given query is related to travel. Respond with 'yes' or 'no'."
+    )
+
+    #Setup the parser output parser and prompt
+    output_parser = StructuredOutputParser.from_response_schemas([response_schema])
+    format_instructions = output_parser.get_format_instructions()
+
+    prompt = PromptTemplate(
+        template=(
+            "Determine if the following query is related to travel.\n"
+            "{format_instructions}\n\n"
+            "Query: {query}"
+        ),
+        input_variables=["query"],
+        partial_variables={"format_instructions": format_instructions}
+    )
+
+    chain = prompt | model | output_parser
+
+    result = chain.invoke({"query": query})
+
+    is_related = result["travel_related"].strip().lower() == 'yes'
+
+    return is_related

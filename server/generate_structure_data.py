@@ -48,3 +48,6 @@ def get_details_searches(url):
 
 
 
+
+
+
