@@ -4,6 +4,7 @@ from server.routes import api_call
 
 app = Flask(__name__)
 api = Api(app)
+
 api.add_resource(api_call, "/query")
 
 if __name__ == "__main__":
