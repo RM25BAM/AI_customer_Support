@@ -62,79 +62,36 @@ def filtered_summarizer(query, paragraph):
 
 
 # API_CALL to get response
-# class UserResponse(Resource):
-#     def post(self):
-#         data = request.get_json()
-#         # user_id = data.get('user_id')
-#         query = data.get("query")
-        
-#         search_query = configureOllama(query) # Getting Input Query
-#         do_google_search = google_search(search_query, my_cse_id, num=5, cr="us", lr="lang_en") # DO input based on LLM given
-#         format_string = format_data(do_google_search) # Format this on a single string
-
-#         if do_google_search is None: # If the chat is Travel related if not give static respond
-#             return jsonify({"message": "Sorry, I can only responds to travel-related inquiries."})
-#         summarized = filtered_summarizer(query, format_string) # Summerize for really good repond
-
-
-#         response = summarized
-#         # if not user_id or not query or not response:
-#         #     return jsonify({"message": "Missing required parameters!"})
-
-#         # Save response with a reference to the user_id
-#         response_ref = realtime_database.child("responses").push({
-#             # "user_id": user_id,
-#             "query": query,
-#             "response": response,
-#             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-#         })
-
-
-#         return jsonify({"message": "Response saved!", "response":response, "response_ref": response_ref})
-
-
-
-
-import logging
-
-
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-
 class UserResponse(Resource):
     def post(self):
         data = request.get_json()
+        # user_id = data.get('user_id')
         query = data.get("query")
+        
+        search_query = configureOllama(query) # Getting Input Query
+        do_google_search = google_search(search_query, my_cse_id, num=5, cr="us", lr="lang_en") # DO input based on LLM given
+        format_string = format_data(do_google_search) # Format this on a single string
 
-        if not query:
-            return jsonify({"message": "Missing query parameter!"})
+        if do_google_search is None: # If the chat is Travel related if not give static respond
+            return jsonify({"message": "Sorry, I can only responds to travel-related inquiries."})
+        summarized = filtered_summarizer(query, format_string) # Summerize for really good repond
 
-        try:
-            # Get the search query from the LLM
-            search_query = configureOllama(query)
-            
-            # Perform the Google search
-            do_google_search = google_search(search_query, my_cse_id, num=5, cr="us", lr="lang_en")
 
-            if not do_google_search:
-                return jsonify({"message": "No search results found or failed to get search results."})
+        response = summarized
+        # if not user_id or not query or not response:
+        #     return jsonify({"message": "Missing required parameters!"})
 
-            # Format the search results
-            format_string = format_data(do_google_search)
+        # Save response with a reference to the user_id
+        response_ref = realtime_database.child("responses").push({
+            # "user_id": user_id,
+            "query": query,
+            "response": response,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
 
-            # Summarize the results
-            summarized = filtered_summarizer(query, format_string)
 
-            # Save the response to the database
-            response_ref = realtime_database.child("responses").push({
-                "query": query,
-                "response": summarized,
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            })
+        return jsonify({"message": "Response saved!", "response":response, "response_ref": response_ref})
 
-            return jsonify({"message": "Response saved!", "response": summarized, "response_ref": response_ref})
 
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
-            return jsonify({"message": "An error occurred while processing the request.", "error": str(e)})
+
+
