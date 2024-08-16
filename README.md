@@ -19,3 +19,9 @@ To start off we have a figma design that we are basing our project on.
 1. Animation when app is loading
 2. sign in/sign up page
 3. Work on regular frontend chatbox
+
+
+## Worked
+
+![System Arch](github_mockup/system.png)
+[Link](https://miro.com/app/board/uXjVKpVFRIM=/)
