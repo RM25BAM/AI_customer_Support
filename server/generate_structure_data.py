@@ -21,9 +21,9 @@ def google_search(search_term, cse_id, **kwargs):
         title = result.get('title')
         link = result.get('link')
         snippet = result.get("snippet")
-        paragraph = get_details_searches(link)
-        time.sleep(3)
-        info[index] = [title, link, snippet, paragraph]
+        # paragraph = get_details_searches(link)
+        # time.sleep(3)
+        info[index] = [title, link, snippet]
 
     return info
         
