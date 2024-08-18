@@ -13,8 +13,11 @@ import {
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 export function SignupForm() {
+  const [email, setEmail] = useState('');
+  
   return (
     <div className="w-full max-w-md">
       <form>
@@ -26,15 +29,6 @@ export function SignupForm() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                type="text"
-                placeholder="username"
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
